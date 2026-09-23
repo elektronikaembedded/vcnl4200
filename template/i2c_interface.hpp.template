@@ -1,0 +1,64 @@
+/**
+ * @file        i2c_interface.hpp.template
+ * @brief       I2C interface implementation template.
+ *
+ *              Provides the platform-specific I2C interface.
+ */
+
+#pragma once
+
+#include <cstdint>
+
+#include "i2c_interface.hpp"
+#include "PLATFORM_I2C_HAL_HEADER"
+
+namespace interface
+{
+
+class PlatformI2c
+{
+public:
+    explicit PlatformI2c(PLATFORM_I2C_HANDLE_TYPE& handle)
+        : m_i2cHandle(handle)
+    {
+    }
+
+    I2cError init();
+
+    I2cError write(
+        std::uint8_t address,
+        const std::uint8_t* data,
+        std::uint32_t length,
+        std::uint32_t timeout);
+
+    I2cError read(
+        std::uint8_t address,
+        std::uint8_t* data,
+        std::uint32_t length,
+        std::uint32_t timeout);
+
+    I2cError writeRead(
+        std::uint8_t address,
+        const std::uint8_t* txData,
+        std::uint32_t txLength,
+        std::uint8_t* rxData,
+        std::uint32_t rxLength,
+        std::uint32_t timeout);
+
+    I2cError isDeviceReady(
+        std::uint8_t address,
+        std::uint8_t retryCount,
+        std::uint32_t timeout);
+
+    I2cError readRegister(
+        std::uint8_t address,
+        std::uint8_t reg,
+        std::uint8_t* data,
+        std::uint32_t length,
+        std::uint32_t timeout);
+
+private:
+    PLATFORM_I2C_HANDLE_TYPE& m_i2cHandle;
+};
+
+} // namespace interface
