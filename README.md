@@ -1,136 +1,110 @@
-# debug_log
+# VCNL4200
 
-A small C++ debug logging module for embedded projects.
+A lightweight C++ driver for the **Vishay VCNL4200** proximity and ambient light sensor.
 
-I started this project because I wanted a simple logging module that I could drop into different embedded projects without rewriting the logging code every time.
+This driver is written with embedded systems in mind. The sensor code is kept separate from the platform-specific I2C code, so it can be reused across different microcontrollers and projects.
 
-The main idea is to keep the **logger separate from the hardware transport**.
+## Features
 
-For example, the logger shouldn't have to know whether the output is going through USB CDC or UART. The project decides that.
+* Proximity sensor support
+* Ambient light sensor support
+* I2C communication
+* Register-level configuration
+* No dynamic memory allocation
+* Platform-independent sensor code
+* Suitable for bare-metal and RTOS-based projects
 
-## How it works
+## Project Structure
 
-From the application side, I want logging to be as simple as:
-
-```cpp
-project::log::init();
-
-project::log::info("System started");
+```text
+vcnl4200/
+├── vcnl4200.hpp
+├── vcnl4200_impl.hpp
+├── vcnl4200_registers.hpp
+│
+└── Port/
+    └── i2c_interface.hpp.template
 ```
 
-The application doesn't need to worry about the underlying transport.
+### Driver
 
-The project configuration decides what is used underneath:
+`vcnl4200.hpp` contains the public API used by the application.
+
+`vcnl4200_impl.hpp` contains the driver implementation.
+
+`vcnl4200_registers.hpp` contains the VCNL4200 register addresses, bit definitions, and related constants.
+
+### Port
+
+The `Port/` directory contains templates for connecting the driver to a platform-specific I2C implementation.
+
+For example, an STM32 project can provide an I2C implementation using STM32 HAL without making the VCNL4200 driver depend on STM32 HAL.
+
+## How It Works
+
+The driver is split into two parts:
+
+```text
+Application
+    │
+    ▼
+VCNL4200 Driver
+    │
+    ▼
+I2C Interface
+    │
+    ▼
+Platform I2C
+    │
+    ▼
+MCU / HAL
+```
+
+This keeps the sensor driver portable while allowing each project to use its own I2C implementation.
+
+## Example
+
+A typical application can use the driver like this:
 
 ```cpp
-struct system_config
-{
-    using debug_transport = debug::transport::usb_cdc;
-    using debug_config    = project_debug_log_config;
-};
+#include "vcnl4200.hpp"
 
-namespace project
+vcnl4200::Driver sensor(i2c);
+
+if (sensor.init() == vcnl4200::Error::Success)
 {
-    using log = debug::logger<
-        system_config::debug_transport,
-        system_config::debug_config>;
+    // Read proximity / ambient light data
 }
 ```
 
-So if I later change from USB CDC to UART, the application code doesn't need to change.
+The API is still evolving as the driver is developed.
 
-## The basic idea
+## Platform Support
 
-The module is split into a few simple parts:
+The VCNL4200 driver does not depend on a particular MCU, HAL, or RTOS.
 
-```text
-debug_log
-   │
-   ├── Logger
-   │
-   ├── Transport
-   │      ├── USB CDC
-   │      ├── UART
-   │      └── Other transports
-   │
-   └── Configuration
-```
+A platform-specific I2C implementation can be added for:
 
-The logger takes care of the logging itself.
+* STM32
+* Zephyr
+* Other microcontrollers and embedded platforms
 
-The transport takes care of sending the data somewhere.
+## Design Goals
 
-The project configuration ties everything together.
+The main goal is to have a **small, reusable VCNL4200 driver** that can be dropped into different embedded projects without having to rewrite the sensor code.
 
-## Project structure
+The project also follows a few simple principles:
 
-For example, in an STM32 Cube project I use it like this:
+* Keep hardware-specific code outside the driver.
+* Avoid dynamic memory allocation.
+* Keep the API simple.
+* Keep register definitions easy to understand.
+* Make the driver easy to test and reuse.
 
-```text
-Project
-│
-├── Modules/
-│   └── debug_log/
-│       ├── debug_log.hpp
-│       ├── debug_transport.hpp
-│       ├── debug_impl.hpp
-│       └── ...
-│
-├── Ports/
-│   └── debug_transport_usb_cdc.cpp
-│
-├── Configs/
-│   └── debug_log_config.hpp
-│
-└── Project/
-    └── system_config.hpp
-```
+## Status
 
-The important thing here is that the core module doesn't contain STM32-specific transport code.
-
-The STM32-specific part lives in the `Ports` directory.
-
-## Adding another transport
-
-If I want to use UART instead of USB CDC, I can add another transport implementation:
-
-```text
-Ports/
-├── debug_transport_usb_cdc.cpp
-└── debug_transport_uart.cpp
-```
-
-and select it from the project configuration.
-
-The application can still use:
-
-```cpp
-project::log::info("Hello");
-```
-
-without knowing how the message is actually transmitted.
-
-## USB CDC
-
-I'm currently using USB CDC as one of the transports.
-
-There is also a template available:
-
-```text
-debug_transport_usb_cdc.cpp.template
-```
-
-The template provides the basic structure, while the actual USB CDC transfer is implemented by the target project.
-
-This keeps the logging module independent of the particular STM32 USB implementation.
-
-
-
-while the hardware-specific details stay outside the logger itself.
-
+Work in progress. The driver is being developed and tested on embedded hardware.
 
 ## License
 
-MIT License
-
-Copyright © Sarath S
+See [LICENSE](LICENSE) for license information.

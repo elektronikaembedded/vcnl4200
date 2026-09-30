@@ -10,11 +10,27 @@
 #include <cstdint>
 
 #include "i2c_interface.hpp"
+
+// PLATFORM_I2C_HAL_HEADER:
+//     Header providing the platform I2C HAL/API.
+//
+//     Example:
+//         "stm32u5xx_hal.h"
+//
 #include "PLATFORM_I2C_HAL_HEADER"
 
 namespace interface
 {
 
+///
+/// @brief Platform-specific I2C interface.
+///
+///        PLATFORM_I2C_HANDLE_TYPE:
+///            Platform-specific I2C peripheral handle type.
+///
+///        Example for STM32 HAL:
+///            I2C_HandleTypeDef
+///
 class PlatformI2c
 {
 public:
