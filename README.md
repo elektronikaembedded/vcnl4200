@@ -2,47 +2,52 @@
 
 A lightweight C++ driver for the **Vishay VCNL4200** proximity and ambient light sensor.
 
-This driver is written with embedded systems in mind. The sensor code is kept separate from the platform-specific I2C code, so it can be reused across different microcontrollers and projects.
+The driver is written for embedded systems and keeps the sensor logic separate from the platform-specific I2C implementation. This makes it easier to reuse the driver across different microcontrollers and projects.
 
 ## Features
 
-* Proximity sensor support
-* Ambient light sensor support
+* Proximity sensing
+* Ambient light sensing
 * I2C communication
 * Register-level configuration
 * No dynamic memory allocation
-* Platform-independent sensor code
+* Platform-independent driver code
 * Suitable for bare-metal and RTOS-based projects
 
-## Project Structure
+## Repository Structure
 
 ```text
 vcnl4200/
-├── vcnl4200.hpp
-├── vcnl4200_impl.hpp
-├── vcnl4200_registers.hpp
+├── include/
+│   ├── vcnl4200.hpp
+│   ├── vcnl4200_impl.hpp
+│   └── vcnl4200_registers.hpp
 │
-└── Port/
-    └── i2c_interface.hpp.template
+├── template/
+│   └── i2c_interface.hpp.template
+│
+└── README.md
 ```
 
-### Driver
+### `include`
 
-`vcnl4200.hpp` contains the public API used by the application.
+Contains the main VCNL4200 driver.
 
-`vcnl4200_impl.hpp` contains the driver implementation.
+* `vcnl4200.hpp` — Public driver API
+* `vcnl4200_impl.hpp` — Driver implementation
+* `vcnl4200_registers.hpp` — Register addresses, bit definitions, and related constants
 
-`vcnl4200_registers.hpp` contains the VCNL4200 register addresses, bit definitions, and related constants.
+The code in this directory is intended to remain independent of a specific MCU, HAL, or RTOS.
 
-### Port
+### `template`
 
-The `Port/` directory contains templates for connecting the driver to a platform-specific I2C implementation.
+Contains templates for implementing the platform-specific interfaces required by the driver.
 
-For example, an STM32 project can provide an I2C implementation using STM32 HAL without making the VCNL4200 driver depend on STM32 HAL.
+For example, an STM32 project can adapt the I2C interface template to use STM32 HAL without adding STM32-specific code to the VCNL4200 driver.
 
-## How It Works
+## Architecture
 
-The driver is split into two parts:
+The driver is organized around a simple separation between the sensor and the hardware interface:
 
 ```text
 Application
@@ -60,11 +65,13 @@ Platform I2C
 MCU / HAL
 ```
 
-This keeps the sensor driver portable while allowing each project to use its own I2C implementation.
+The VCNL4200 driver only depends on the I2C interface. The actual I2C implementation is provided by the target platform.
 
-## Example
+## Usage
 
-A typical application can use the driver like this:
+A platform-specific I2C implementation is passed to the VCNL4200 driver.
+
+For example:
 
 ```cpp
 #include "vcnl4200.hpp"
@@ -73,37 +80,41 @@ vcnl4200::Driver sensor(i2c);
 
 if (sensor.init() == vcnl4200::Error::Success)
 {
-    // Read proximity / ambient light data
+    // Use the sensor
 }
 ```
 
-The API is still evolving as the driver is developed.
+The API is still evolving as the driver is developed and tested.
 
 ## Platform Support
 
-The VCNL4200 driver does not depend on a particular MCU, HAL, or RTOS.
+The driver is not tied to a particular microcontroller or operating system.
 
-A platform-specific I2C implementation can be added for:
+The platform interface can be adapted for:
 
-* STM32
+* STM32 HAL
 * Zephyr
-* Other microcontrollers and embedded platforms
+* Bare-metal applications
+* Other embedded platforms
 
 ## Design Goals
 
-The main goal is to have a **small, reusable VCNL4200 driver** that can be dropped into different embedded projects without having to rewrite the sensor code.
+The project is intended to be a small and reusable VCNL4200 driver that can be dropped into different embedded projects with minimal changes.
 
-The project also follows a few simple principles:
+The main design goals are:
 
+* Keep the driver platform independent.
 * Keep hardware-specific code outside the driver.
 * Avoid dynamic memory allocation.
 * Keep the API simple.
-* Keep register definitions easy to understand.
-* Make the driver easy to test and reuse.
+* Keep register definitions clear and easy to maintain.
+* Make the driver suitable for both bare-metal and RTOS-based applications.
 
 ## Status
 
-Work in progress. The driver is being developed and tested on embedded hardware.
+Work in progress.
+
+The driver is currently being developed and tested on embedded hardware. APIs and supported features may change as development continues.
 
 ## License
 
